@@ -6,19 +6,19 @@ close all
 %% Variabili
 Lc=64;                     %Processing gain
 Tb=1/10;                   %Tempo di bit
-len_signal=5;              %Lunghezza dei segnali trasmessi
-Nuser = 1;                 %Numero di utenti
+len_signal=1000;              %Lunghezza dei segnali trasmessi
+Nuser = 10;                 %Numero di utenti
 EbNo = 20;   
-plotting = false;          %Plotting nel dominio del tempo e frequenza
-jammer_intensity = 10;     %Rapporto potenza jammer/potenza segnale
-jamming_type=0;            %Tipo Jammer 0:Broadband 1:SingleTone 2:MultiTone
+plotting = true;          %Plotting nel dominio del tempo e frequenza
+jammer_intensity = 2;     %Rapporto potenza jammer/potenza segnale
+jamming_type=1;            %Tipo Jammer 0:Broadband 1:SingleTone 2:MultiTone
 alpha = 2.5;               %Valori da 1 a 5 -> Figura 10.44
 
 %Matrici dei segnali in forma binaria
 v_t_ref = sequence_generator(Nuser,len_signal);
 
 %% Singolo test
-[n_err,ber,rxbits] = cdma_transmission_and_metrics_bis(v_t_ref,Lc,Tb,EbNo,plotting,jammer_intensity,jamming_type,alpha);
+[n_err,ber,rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo,plotting,jammer_intensity,jamming_type,alpha);
 ber = mean(ber)
 
 %% BER al variare di Lc e Nutenti (Senza Jamming)

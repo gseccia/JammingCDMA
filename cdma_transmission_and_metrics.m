@@ -1,7 +1,7 @@
 % Implementazione di una comunicazione con protocollo d'accesso CDMA basato
 % su Direct Sequence Spread Spectrum e modulazione BPSK, effettuata su 
 % canale AWGN con eventuale presenza di jamming
-function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo, plotting,jammer_intensity_factor,jamming_type,alpha)
+function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo, plotting,jammer_intensity_factor,jamming_type,alpha)    
     % Matrice dei segnali, una riga per ogni utente
     [Nuser,len_signal]=size(v_t_ref);
     
@@ -10,7 +10,7 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
     
     EbNo = db(EbNo, 'power');        
     W = 1/Tc;
-    
+
     % Modulazione BPSK
     v_t_bpsk = bpsk_modulation(v_t_ref);
 
@@ -18,11 +18,12 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
     c_t_ref = pn_generator(Nuser,Lc,len_signal);
     
     % Estensione dei segnali per renderli confrontabili ai codici
+    v_t_ext = sequence_extend(v_t_ref, Lc);
     v_t = sequence_extend(v_t_bpsk, Lc);
     
     % Spreading
     y_t = v_t.*c_t_ref;
-      
+
     %Sovrapposizione dei segnali
     y_t_sum = sum(y_t,1);
         
@@ -32,7 +33,9 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
         signal_power = rms(y_t_sum)^2;
         %Calcolo della potenza del jammer partendo dalla potenza del
         %segnale
-        Pj = signal_power*jammer_intensity_factor
+        Pj = signal_power*jammer_intensity_factor;
+
+        %PI = Pj;
         t = [1:N]*Tc;
         
         % ------- BROADBAND JAMMER ------------
@@ -41,10 +44,10 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
             w = alpha*W;
             
             jamming_signal = (Pj)*(sinc(w*(t-t_iniziale)));
-          
+            
         % ------- Single Tone Jammer -------- 
         elseif jamming_type==1
-            fb = 0.1*W; % frequenza del jammer come la pondero?
+            fb = (0.4*rand()+0.1)*W; % frequenza del jammer come la pondero?
             jamming_signal = sqrt(2*Pj)*cos(2*pi*fb*t);
                         
         % ------- Multi Tone Jammer --------     
@@ -54,8 +57,8 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
             for i=1:length(fb)
                 jamming_signal = jamming_signal + sqrt(2*Pj/length(fb))*cos(2*pi*fb(i)*t);
             end
-            
         end
+                
         %Definizione del canale AWGN con Eb/N0 fissato rispetto alla
         %potenza del segnale da trasmettere (informazione+jammer)
         channel = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (Eb/No)','EbNo',EbNo,'SignalPower',rms(y_t_sum+jamming_signal)^2);
@@ -70,7 +73,7 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
         y_awgn = channel(y_t_sum);
         
         Pn = rms(y_awgn-y_t_sum)^2;
-        PI = Pn;
+        PI = Pn;         
     end
     
     % Despreading
@@ -78,174 +81,198 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
     v_des = y_awgn.*c_t_ref;
     Ps_des = rms(v_des(1,:))^2;
     
+    %Potenze
+    Potenza_jamming = Pj
+    Potenza_rumore = Pn
+    Potenza_interferenza = PI
+    Potenza_segnale = Ps
+    Potenza_despreading = Ps_des
+    Users_noise = Ps_des - PI - Ps
+    
     % Integrazione
-    v_des_integrated = integrate_signal(v_des,Lc);   
+    v_des_integrated = integrate_signal(v_des,Lc);
+    v_des_integrated_ext = sequence_extend(v_des_integrated, Lc);
         
     % Demodulazione BPSK
     rxbits = bpsk_demodulation(v_des_integrated);
+    rxbits_ext = sequence_extend(rxbits, Lc);
     
     % Valutazione del BER per ogni utente
     [n_err, ber] = biterr(rxbits,v_t_ref,'row-wise');
     
     %Plot relativi alla comunicazione relativamente all'utente 1
-    if plotting
+    if plotting    
         % Dominio del tempo
-        tc_interval = 0:Tc:N*Tc;
-        [tb_interval, v_t_plot] = extend_to_plot(v_t_ref, Tb);
-        [~, v_t_bpsk_plot] = extend_to_plot(v_t_bpsk, Tb);
-        [~, c_t_plot] = extend_to_plot(c_t_ref, Tc);
-        [~, y_t_plot] = extend_to_plot(y_t, Tc);
-        [~, y_t_sum_plot] = extend_to_plot(y_t_sum, Tc);
-        [~, y_awgn_plot] = extend_to_plot(y_awgn, Tc);
-        [~, v_des_plot] = extend_to_plot(v_des, Tc);
-        [~, v_des_integrated_plot] = extend_to_plot(v_des_integrated, Tb);
-        [~, rxbits_plot] = extend_to_plot(rxbits, Tb);
+        tc_interval = Tc:Tc:N*Tc;
+        tb_interval = Tb:Tb:len_signal*Tb;
+        % Dominio della frequenza        
+        [tbf_interval, v_f] = fft_transform(v_t_ext, 1/Tc);
+        [~, v_f_bpsk] = fft_transform(v_t, 1/Tc);
+        [wf_interval, c_f] = fft_transform(c_t_ref, W);
+        [tcf_interval, y_f] = fft_transform(y_t, 1/Tc);
+        [~, y_f_sum] = fft_transform(y_t_sum, 1/Tc);
+        [~, y_f_awgn] = fft_transform(y_awgn, 1/Tc);
+        [~, v_des_f] = fft_transform(v_des, 1/Tc);
+        [~, v_des_f_integrated] = fft_transform(v_des_integrated_ext, 1/Tc);
+        [~, rxbits_f] = fft_transform(rxbits_ext, 1/Tc);
+    
         
         figure
         %segnale in ingresso
-        subplot(4,3,1)
-        stairs(tb_interval, v_t_plot(1,:))
+        subplot(4,2,1)
+        stairs(tc_interval, v_t_ext(1,:))
         ylim([-0.5,1.5])
         title("v(t)")
-        
-        %segnale modulato BPSK
-        subplot(4,3,4)
-        stairs(tb_interval, v_t_bpsk_plot(1,:))
-        ylim([-1.5,1.5])
-        title("Modulazione BPSK")
-        
-        %codice
-        subplot(4,3,7)
-        stairs(tc_interval,c_t_plot(1,:))
-        ylim([-1.5,1.5])
-        title("c(t)")
-        
-        %segnale spreaded
-        subplot(4,3,10)
-        stairs(tc_interval, y_t_plot(1,:))
-        ylim([-1.5,1.5])
-        title("Spreading")
 
-        %segnale complessivo
-        subplot(4,3,5)
-        stairs(tc_interval, y_t_sum_plot)
-        ylim([min(y_t_sum_plot) * 1.2, max(y_t_sum_plot) * 1.2])
-        title("Segnale complessivo trasmesso")
-        
-        %segnale complessivo in ricezione
-        subplot(4,3,11)
-        stairs(tc_interval, y_awgn_plot)
-        ylim([min(y_awgn_plot) * 1.2, max(y_awgn_plot) * 1.2])
-        title("Uscita del canale AWGN")
-        
-        %segnale despreaded
-        subplot(4,3,3)
-        stairs(tc_interval, v_des_plot(1,:))
-        ylim([min(v_des_plot(1,:)) * 1.2, max(v_des_plot(1,:)) * 1.2])
-        title("Despreading")
-        
-        %segnale integrato
-        subplot(4,3,6)
-        stairs(tb_interval, v_des_integrated_plot(1,:))
-        ylim([min(v_des_integrated_plot(1,:)) * 1.2, max(v_des_integrated_plot(1,:)) * 1.2])
-        title("Integrazione")
-        
-        %demodulazione BPSK
-        subplot(4,3,9)
-        stairs(tb_interval, rxbits_plot(1,:))
-        ylim([-0.5,1.5])
-        title("Demodulazione BPSK")
-        
-        %Bit Error Rate
-        subplot(4,3,12)
-        text(0.2,0.5,'BER: ')
-        text(0.5,0.5,num2str(ber(1)))
-        axis off
-        
-        % in presenza di jamming
-        if jammer_intensity_factor~=0
-            [~, jamming_signal_plot] = extend_to_plot(jamming_signal, Tc);
-            subplot(4,3,8)
-            stairs(tc_interval, jamming_signal_plot)
-            title("Jamming Signal")
-        end
-        
-        sgtitle('Analisi nel Dominio del Tempo per Utente 1')
-        % Dominio della frequenza        
-        [tbf_interval, v_f_plot] = fft_transform(v_t_ref, 1/Tb);
-        [~, v_f_bpsk_plot] = fft_transform(v_t_bpsk, 1/Tb);
-        [wf_interval, c_f_plot] = fft_transform(c_t_ref, W);
-        [tcf_interval, y_f_plot] = fft_transform(y_t, 1/Tc);
-        [~, y_f_sum_plot] = fft_transform(y_t_sum, 1/Tc);
-        [~, y_f_awgn_plot] = fft_transform(y_awgn, 1/Tc);
-        [~, v_des_f_plot] = fft_transform(v_des, 1/Tc);
-        [~, v_des_f_integrated] = fft_transform(v_des_integrated, 1/Tb);
-        [~, rxbits_f_plot] = fft_transform(rxbits, 1/Tb);
-     
-        figure
-        
-        %segnale in ingresso
-        subplot(4,3,1)
-        plot(tbf_interval,v_f_plot(1,:))
+        subplot(4,2,2)
+        plot(tbf_interval,v_f(1,:))
         xlim([min(tcf_interval) max(tcf_interval)])
         title("v(f)")
-                
+
         %segnale modulato BPSK
-        subplot(4,3,4)
-        plot(tbf_interval, v_f_bpsk_plot(1,:))
+        subplot(4,2,3)
+        stairs(tc_interval, v_t(1,:))
+        ylim([-1.5,1.5])
+        title("v_{BPSK}(t)")
+
+        subplot(4,2,4)
+        plot(tbf_interval, v_f_bpsk(1,:))
         xlim([min(tcf_interval) max(tcf_interval)])
-        title("Modulazione BPSK")
-        
+        title("v_{BPSK}(f)")
+
         %codice
-        subplot(4,3,7)
-        plot(wf_interval,c_f_plot(1,:))
+        subplot(4,2,5)
+        stairs(tc_interval,c_t_ref(1,:))
+        ylim([-1.5,1.5])
+        title("c(t)")
+
+        subplot(4,2,6)
+        plot(wf_interval,c_f(1,:))
         title("c(f)")
 
         %segnale spreaded
-        subplot(4,3,10)
-        plot(wf_interval, y_f_plot(1,:))
+        subplot(4,2,7)
+        stairs(tc_interval, y_t(1,:))
+        ylim([-1.5,1.5])
         title("Spreading")
-        
+
+        subplot(4,2,8)
+        plot(wf_interval, y_f(1,:))
+        title("Spreading")
+
+        figure
         %segnale complessivo
-        subplot(4,3,5)
-        plot(tcf_interval, y_f_sum_plot)
+        subplot(3,2,1)
+        stairs(tc_interval, y_t_sum)
+        ylim([min(y_t_sum) * 1.2, max(y_t_sum) * 1.2])
         title("Segnale complessivo trasmesso")
 
+        subplot(3,2,2)
+        plot(tcf_interval, y_f_sum)
+        title("Segnale complessivo trasmesso")
+
+
+        % in presenza di jamming
+        if jammer_intensity_factor~=0
+            subplot(3,2,3)
+            stairs(tc_interval, jamming_signal)
+            ylim([min(jamming_signal) * 1.2, max(jamming_signal) * 1.2])
+            title("Jamming Signal")
+
+            [~, jamming_signal_f] = fft_transform(jamming_signal, 1/Tc);
+            subplot(3,2,4)
+            plot(tcf_interval,jamming_signal_f)
+            title("Jamming Signal")
+        end
+
         %segnale complessivo in ricezione
-        subplot(4,3,11)
-        plot(tcf_interval, y_f_awgn_plot)
+        subplot(3,2,5)
+        stairs(tc_interval, y_awgn)
+        ylim([min(y_awgn) * 1.2, max(y_awgn) * 1.2])
         title("Uscita del canale AWGN")
-      
+
+        subplot(3,2,6)
+        plot(tcf_interval, y_f_awgn)
+        title("Uscita del canale AWGN")
+
+
+        figure
         %segnale despreaded
-        subplot(4,3,3)
-        plot(tcf_interval, v_des_f_plot(1,:))
+        subplot(3,2,1)
+        stairs(tc_interval, v_des(1,:))
+        ylim([min(v_des(1,:)) * 1.2, max(v_des(1,:)) * 1.2])
         title("Despreading")
-        
+
+        subplot(3,2,2)
+        plot(tcf_interval, v_des_f(1,:))
+        title("Despreading")
+
         %segnale integrato
-        subplot(4,3,6)
+        subplot(3,2,3)
+        stairs(tb_interval, v_des_integrated(1,:))
+        ylim([min(v_des_integrated(1,:)) * 1.2, max(v_des_integrated(1,:)) * 1.2])
+        title("Integrazione")
+
+        subplot(3,2,4)
         plot(tbf_interval, v_des_f_integrated(1,:))
         xlim([min(tcf_interval) max(tcf_interval)])
         title("Integrazione")
-        
+
         %demodulazione BPSK
-        subplot(4,3,9)
-        plot(tbf_interval, rxbits_f_plot(1,:))
+        subplot(3,2,5)
+        stairs(tb_interval, rxbits(1,:))
+        ylim([-0.5,1.5])
+        title("Demodulazione BPSK")
+
+        subplot(3,2,6)
+        plot(tbf_interval, rxbits_f(1,:))
         xlim([min(tcf_interval) max(tcf_interval)])
         title("Demodulazione BPSK")
+
+
+        figure
+        subplot(3,1,1)
+        stairs(tb_interval, v_t_bpsk(1,:))
+        hold on
+        stairs(tb_interval, v_des_integrated(1,:))
+        legend('BPSK','Integration')
+
+        subplot(3,1,2)
+        plot(tbf_interval, v_f_bpsk(1,:))
+        hold on
+        plot(tbf_interval, v_des_f_integrated(1,:))
+        legend('BPSK','Integration')
+
+        subplot(3,1,3)
+        stairs(tb_interval, v_t_ref(1,:))
+        hold on
+        stairs(tb_interval, rxbits(1,:))
+        legend('Tx','Rx')
         
         % in presenza di jamming
         if jammer_intensity_factor~=0
-            [~, jamming_signal_f_plot] = fft_transform(jamming_signal, 1/Tc);
-            subplot(4,3,8)
-            plot(tcf_interval,jamming_signal_f_plot)
+            figure
+            subplot(2,2,1)
+            stairs(tc_interval, jamming_signal)
+            ylim([min(jamming_signal) * 1.2, max(jamming_signal) * 1.2])
             title("Jamming Signal")
-        end
-        
-        sgtitle('Analisi nel Dominio della Frequenza per Utente 1')               
-        figure
-        plot(tbf_interval, v_f_bpsk_plot(1,:))
-        hold on
-        plot(tbf_interval, v_des_f_integrated(1,:))
-        legend('BPSK','Integration')        
+
+            [~, jamming_signal_f] = fft_transform(jamming_signal, 1/Tc);
+            subplot(2,2,2)
+            plot(tcf_interval,jamming_signal_f)
+            title("Jamming Signal")
+            
+            jamming_signal_spreaded = jamming_signal.*c_t_ref(1,:);
+            
+            subplot(2,2,3)
+            stairs(tc_interval, jamming_signal_spreaded)
+            ylim([min(jamming_signal_spreaded) * 1.2, max(jamming_signal_spreaded) * 1.2])
+            title("Jamming Signal Spreaded")
+
+            [~, jamming_signal_f_spred] = fft_transform(jamming_signal_spreaded, 1/Tc);
+            subplot(2,2,4)
+            plot(tcf_interval,jamming_signal_f_spred)
+            title("Jamming Signal")
+        end    
     end
 end
