@@ -47,7 +47,7 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
             
         % ------- Single Tone Jammer -------- 
         elseif jamming_type==1
-            fb = (0.4*rand()+0.1)*W; % frequenza del jammer come la pondero?
+            fb = (0.4*rand()+0.1)*W;
             jamming_signal = sqrt(2*Pj)*cos(2*pi*fb*t);
                         
         % ------- Multi Tone Jammer --------     
@@ -55,7 +55,7 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
             fb=1/10*[1:10]*W;
             jamming_signal = zeros(1,N);
             for i=1:length(fb)
-                jamming_signal = jamming_signal + sqrt(2*Pj/length(fb))*cos(2*pi*fb(i)*t);
+                jamming_signal = jamming_signal + sqrt(Pj/length(fb))*cos(2*pi*fb(i)*t);
             end
         end
                 
@@ -82,12 +82,12 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
     Ps_des = rms(v_des(1,:))^2;
     
     %Potenze
-    Potenza_jamming = Pj
-    Potenza_rumore = Pn
-    Potenza_interferenza = PI
-    Potenza_segnale = Ps
-    Potenza_despreading = Ps_des
-    Users_noise = Ps_des - PI - Ps
+%     Potenza_jamming = Pj
+%     Potenza_rumore = Pn
+%     Potenza_interferenza = PI
+%     Potenza_segnale = Ps
+%     Potenza_despreading = Ps_des
+%     Potenza_interferenza_altri_utenti = Ps_des - PI - Ps
     
     % Integrazione
     v_des_integrated = integrate_signal(v_des,Lc);

@@ -1,5 +1,5 @@
 
-function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo, plotting,jammer_intensity_factor,jamming_type,alpha)
+function [n_err, ber, rxbits] = cdma_transmission_and_metrics_old(v_t_ref,Lc,Tb,EbNo, plotting,jammer_intensity_factor,jamming_type,alpha)
     % Matrice dei segnali, una riga per ogni utente
     [Nuser,len_signal]=size(v_t_ref);
     
@@ -59,22 +59,22 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
         channel = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (Eb/No)','EbNo',EbNo,'SignalPower',rms(y_t_sum+jamming_signal)^2);
         y_awgn = channel(jamming_signal+y_t_sum);
         
-        Pn = rms(y_awgn-jamming_signal-y_t_sum)^2;
-        PI = Pj + Pn;
+        Pn = rms(y_awgn-jamming_signal-y_t_sum)^2
+        PI = Pj + Pn
     else %In assenza di jamming
         %Definizione del canale AWGN con Eb/N0 fissato rispetto alla
         %potenza del segnale da trasmettere
         channel = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (Eb/No)','EbNo',EbNo,'SignalPower',rms(y_t_sum)^2);
         y_awgn = channel(y_t_sum);
         
-        Pn = rms(y_awgn-y_t_sum)^2;
-        PI = Pn;
+        Pn = rms(y_awgn-y_t_sum)^2
+        PI = Pn
     end
     
     % Despreading
-    Ps = rms(y_t(1,:))^2;
+    Ps = rms(y_t(1,:))^2
     v_des = y_awgn.*c_t_ref;
-    Ps_des = rms(v_des(1,:))^2;
+    Ps_des = rms(v_des(1,:))^2
     
     % Integrazione
     v_des_integrated = integrate_signal(v_des,Lc);   

@@ -1,0 +1,6 @@
+ber_1 = 0
+ber_2 = 0
+
+
+sym_err_dem_1 = 0
+sym_err_dem_2 = 0
