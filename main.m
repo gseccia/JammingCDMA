@@ -146,12 +146,12 @@ title('BER al variare di EbN0 e Lc (Senza Jamming)')
 
  
 %% BER al variare di Jamming intensity e type
-Nuser = 1;
+Nuser = 5;
 len_signal=1000;
 %Matrici dei segnali in forma binaria
 v_t_ref = sequence_generator(Nuser,len_signal);
 
-jam_intensity = [0:1:5]; %Intensità del jamming rispetto al segnale
+jam_intensity = [0:1:10]; %Intensità del jamming rispetto al segnale
 jam_type = [0 1 2]; %Tipologie di jammer
 Lcs=[16 32 64]; %Processing gain considerati
 
@@ -167,7 +167,7 @@ for i=1:length(jam_type)
     for z=1:length(Lcs)
         for k = 1:length(jam_intensity)
             [i, z, k]
-            bers = zeros(1,100);
+            bers = zeros(1,30);
             for j=1:length(bers)
                 [n_err,ber,rxbits] = cdma_transmission_and_metrics(v_t_ref,Lcs(z),Tb,EbNo,0,jam_intensity(k),jam_type(i),alpha);
                 bers(j) = mean(ber);
@@ -205,7 +205,6 @@ dim = [.15 .9 .0 .0];
 str = join(['Numero di utenti=',num2str(Nuser),' con Eb/N_0=', num2str(db(EbNo, 'power')), ' dB']);
 annotation('textbox',dim,'String',str,'FitBoxToText','on');
 title('BER al variare di Jamming intensity e type')
-
 
 %% BER al variare di alpha
 jam_intensity = [0:1:10]; %Intensità del jamming rispetto al segnale
@@ -268,8 +267,15 @@ str = join(['Numero di utenti=',num2str(Nuser),' con Eb/N_0=', num2str(db(EbNo, 
 annotation('textbox',dim,'String',str,'FitBoxToText','on');
 
 %% Trasferimento Audio
-audio_paths = {'audio/uomo_1.wav', 'audio/uomo_2.wav'};
+Lc=64;                     %Processing gain
+Tb=1/10;                   %Tempo di bit
+EbNo = 20;   
+plotting = false;           %Plotting nel dominio del tempo e frequenza
+jammer_intensity = 5;      %Rapporto potenza jammer/potenza segnale
+jamming_type=1;            %Tipo Jammer 0:Broadband 1:SingleTone 2:MultiTone
+alpha = 2.5;               %Valori da 1 a 5 -> Figura 10.44
 
+audio_paths = {'audio/uomo_1.wav', 'audio/uomo_2.wav'};
 [original_audio,v_t_ref,fr_vec] = create_tx_signal(audio_paths);
 [n_err,ber,rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo,plotting,jammer_intensity,jamming_type,alpha);
 [rec_sounds] = retrieve_tx_signals(rxbits, fr_vec, audio_paths);
@@ -277,7 +283,7 @@ audio_paths = {'audio/uomo_1.wav', 'audio/uomo_2.wav'};
 
 ber
 sym_err_dem
+
 %%
-% ANALISI DEL SOLO SPREADING DEL SEGNALE DI JAMMING PER VEDERE CHE SUCCEDE
-% ANALISI DEL JAMMING DOPO IL FILTRAGGIO
-% TRASFERIMENTO FILE AUDIO -> OK
+- 2 audio
+- BER = [10e-1 10e-4, 10e-6, 10e-9]

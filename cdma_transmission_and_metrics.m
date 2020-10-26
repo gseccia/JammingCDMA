@@ -72,6 +72,7 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
         channel = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (Eb/No)','EbNo',EbNo,'SignalPower',rms(y_t_sum)^2);
         y_awgn = channel(y_t_sum);
         
+        Pj = 0;
         Pn = rms(y_awgn-y_t_sum)^2;
         PI = Pn;         
     end
@@ -80,14 +81,6 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
     Ps = rms(y_t(1,:))^2;
     v_des = y_awgn.*c_t_ref;
     Ps_des = rms(v_des(1,:))^2;
-    
-    %Potenze
-%     Potenza_jamming = Pj
-%     Potenza_rumore = Pn
-%     Potenza_interferenza = PI
-%     Potenza_segnale = Ps
-%     Potenza_despreading = Ps_des
-%     Potenza_interferenza_altri_utenti = Ps_des - PI - Ps
     
     % Integrazione
     v_des_integrated = integrate_signal(v_des,Lc);
@@ -102,6 +95,13 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
     
     %Plot relativi alla comunicazione relativamente all'utente 1
     if plotting    
+        %Potenze
+        Potenza_jamming = Pj
+        Potenza_rumore = Pn
+        Potenza_interferenza = PI
+        Potenza_segnale = Ps
+        Potenza_despreading = Ps_des
+        Potenza_interferenza_altri_utenti = Ps_des - PI - Ps
         % Dominio del tempo
         tc_interval = Tc:Tc:N*Tc;
         tb_interval = Tb:Tb:len_signal*Tb;
@@ -247,6 +247,7 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
         stairs(tb_interval, v_t_ref(1,:))
         hold on
         stairs(tb_interval, rxbits(1,:))
+        ylim([-0.5,1.5])
         legend('Tx','Rx')
         
         % in presenza di jamming
