@@ -22,8 +22,8 @@ v_t_ref = sequence_generator(Nuser,len_signal);
 ber = mean(ber)
 
 %% BER al variare di Lc e Nutenti (Senza Jamming)
-Nuser=10;
-Lc_values = [255];	%Valori del processing gain da testare
+Nuser=25;
+Lc_values = [15 63 127];	%Valori del processing gain da testare
 mean_ber = zeros(length(Lc_values),Nuser);	%Nuser rappresenta il numero massimo di utenti da considerare
 LegendsStrings = cell(length(Lc_values),1);
 EbNo = 20;
@@ -34,7 +34,7 @@ for i=1:length(Lc_values)
     for k = 1:Nuser
         [k i]
         v_t_ref = sequence_generator(k,len_signal);
-        [n_err,ber,rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc_values(i),Tb,EbNo,0,0,0,0);
+        [n_err,ber,rxbits] = cdma_transmission_and_metrics_bis(v_t_ref,Lc_values(i),Tb,EbNo,0,0,0,0);
         mean_ber(i,k) = mean(ber);
     end
     LegendsStrings{i} = ['Lc = ',num2str(Lc_values(i))];

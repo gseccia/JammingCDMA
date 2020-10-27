@@ -4,6 +4,7 @@ function [c_t] = pn_generator(Nuser,Lc,len_signal)
     c_t_ref = zeros(Nuser,Lc);
     for i=1:Nuser
         pn_seq_gen = comm.PNSequence('Polynomial', 'z^53 + z^17 + z^2 + 1','SamplesPerFrame',Lc,'InitialConditions',sequence_generator(1,53));
+%         pn_seq_gen = mseq(2,log2(Lc+1), Lc+1, i)';
         c_t_ref(i,:)=pn_seq_gen()';
     end
     
