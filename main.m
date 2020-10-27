@@ -22,8 +22,8 @@ v_t_ref = sequence_generator(Nuser,len_signal);
 ber = mean(ber)
 
 %% BER al variare di Lc e Nutenti (Senza Jamming)
-Nuser=10;
-Lc_values = [255];	%Valori del processing gain da testare
+Nuser=20;
+Lc_values = [15 63 127];	%Valori del processing gain da testare
 mean_ber = zeros(length(Lc_values),Nuser);	%Nuser rappresenta il numero massimo di utenti da considerare
 LegendsStrings = cell(length(Lc_values),1);
 EbNo = 20;
