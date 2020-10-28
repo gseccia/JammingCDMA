@@ -38,23 +38,23 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
         %PI = Pj;
         t = [1:N]*Tc;
         
-        % ------- Broadband Jammer ------------
+        % ------- BROADBAND JAMMER ------------
         if jamming_type==0
-            t_picco = (0.5*rand()+0.25);
+            t_picco = (0.5*rand()+0.25)
             w = alpha*W;
             jamming_signal = (Pj)*(sinc(w*(t-t_picco)));
             
         % ------- Single Tone Jammer -------- 
         elseif jamming_type==1
             fb = (0.4*rand()+0.1)*W;
-            jamming_signal = sqrt(2*Pj)*ones(1, N);
+            jamming_signal = sqrt(2*Pj)*ones(1, length(y_t));
                         
         % ------- Multi Tone Jammer --------     
         elseif jamming_type==2
             fb=[0.1:0.2:0.9]*W;
-            jamming_signal = zeros(1, N);
+            jamming_signal = 0.5*sqrt(Pj/(length(fb) + 1))*ones(1, length(y_t));
             for i=1:length(fb)
-                jamming_signal = jamming_signal + sqrt(Pj/length(fb))*cos(2*pi*fb(i)*t);
+                jamming_signal = jamming_signal + sqrt(Pj/(length(fb) + 1))*cos(2*pi*fb(i)*t);
             end
         end
                 

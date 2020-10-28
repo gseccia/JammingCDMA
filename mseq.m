@@ -12,13 +12,6 @@ function ms=mseq(baseVal,powerVal,shift,whichSeq)
 %		  shift    -cyclical shift of the sequence
 %		  whichSeq -sequence istantiation to use 
 %		  (numer of sequences varies with powreVal - see the code)
-
-% (c) Giedrius T. Buracas, SNL-B, Salk Institute
-% Register values are taken from: WDT Davies, System Identification
-% for self-adaptive control. Wiley-Interscience, 1970
-% When using mseq code for design of FMRI experiments, please, cite:
-% G.T.Buracas & G.M.Boynton (2002) Efficient Design of Event-Related fMRI 
-% Experiments Using M-sequences. NeuroImage, 16, 801-813.
  
 if nargin<4, whichSeq=1; end
 if nargin<3, shift=1; end;
