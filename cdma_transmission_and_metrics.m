@@ -42,25 +42,27 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
         if jamming_type==0
 %             t_picco = (0.5*rand()+0.25);
 %             w = alpha*W;
-%             jamming_signal = (Pj)*(sinc(w*(t-t_picco)));
+%             jamming_signal = Pj*(sinc(w*(t-t_picco)));
             jammer = phased.BarrageJammer('ERP', 2*Pj, 'SamplesPerFrame', N);
             jamming_signal = real(jammer()');
 %             jamming_signal =  wgn(1,N,Pj,'linear','real');
-            Pj = rms(jamming_signal)^2;
+            
         % ------- Single Tone Jammer -------- 
         elseif jamming_type==1
-            fb = (0.4*rand()+0.1)*W;
-            jamming_signal = sqrt(2*Pj)*ones(1, N);
+            fb = (0.8*rand()+0.1)*W;
+            %jamming_signal = sqrt(Pj)*ones(1, N);
+            jamming_signal = sqrt(Pj)*cos(2*pi*fb*t);
                         
         % ------- Multi Tone Jammer --------     
         elseif jamming_type==2
-            fb=[0.1:0.2:0.9]*W;
+            fb=[0.1:0.3:0.9]*W;
             jamming_signal = zeros(1, N);
             for i=1:length(fb)
                 jamming_signal = jamming_signal + sqrt(Pj/length(fb))*cos(2*pi*fb(i)*t);
             end
         end
-                
+        
+        Pj_calc = rms(jamming_signal)^2;
         %Definizione del canale AWGN con Eb/N0 fissato rispetto alla
         %potenza del segnale da trasmettere (informazione+jammer)
         channel = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (Eb/No)','EbNo',EbNo,'SignalPower',rms(y_t_sum+jamming_signal)^2);

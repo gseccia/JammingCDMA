@@ -6,8 +6,6 @@ servers = 3;
 monte_carlo_simulations = 1;
 
 meanlen = [];
-meanlen_teory = [];
-meanlen_montecarlo = [];
 min_mu = 1;
 max_mu = 30;
 step_mu = 0.5;
@@ -39,26 +37,21 @@ for x = min_lambda:step_lambda:max_lambda
         [nq_expected,p0, pQ, rho] = expected_mean_queue(1/x, 1/y, servers);
         %[meanlength,len, leng] = MMK(x,y,servers,total_packets);
         meanlen(i,j) = meanlength;
-        if rho <1-0.01
-            meanlen_teory(i,j) = nq_expected;
-        else
-            meanlen_teory(i,j) = 0;
-        end
 
     end
 end
     
-% figure
-% hold on
-% grid on
-% surf(lambda,mu,meanlen');
-% xlabel('lambda');
-% ylabel('mu');
-% zlabel('mean length of the queue in teory');
-% hold off
-% figure
-% surf(lambda,mu,double([1./lambda>servers*1./mu]));
-%     
+figure
+hold on
+grid on
+surf(lambda,mu,meanlen');
+xlabel('lambda');
+ylabel('mu');
+zlabel('mean length of the queue in teory');
+hold off
+figure
+surf(lambda,mu,double([1./lambda>servers*1./mu]));
+    
 % figure
 % hold on
 % grid on
@@ -69,10 +62,12 @@ end
 
 
 %%
+clear all
+clc
 
 total_packets = 1000;
 servers = 5;
-monte_carlo_simulations = 50;
+monte_carlo_simulations = 10;
 
 meanlen = [];
 meanlen_theory = [];
@@ -111,7 +106,7 @@ for x = lambda
     end
 end
 
-%%
+
 figure
 semilogy(meanlen_theory','--')
 hold on
