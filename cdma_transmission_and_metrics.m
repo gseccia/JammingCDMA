@@ -30,7 +30,7 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
     %In presenza di jamming
     if jammer_intensity_factor~=0
         %Calcolo della potenza del segnale trasmesso
-        signal_power = rms(y_t_sum)^2;
+        signal_power = rms(y_t(1,:))^2;
         %Calcolo della potenza del jammer partendo dalla potenza del
         %segnale
         Pj = signal_power*jammer_intensity_factor;
@@ -40,10 +40,13 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
         
         % ------- Broadband Jammer ------------
         if jamming_type==0
-            t_picco = (0.5*rand()+0.25);
-            w = alpha*W;
-            jamming_signal = (Pj)*(sinc(w*(t-t_picco)));
-            
+%             t_picco = (0.5*rand()+0.25);
+%             w = alpha*W;
+%             jamming_signal = (Pj)*(sinc(w*(t-t_picco)));
+            jammer = phased.BarrageJammer('ERP', 2*Pj, 'SamplesPerFrame', N);
+            jamming_signal = real(jammer()');
+%             jamming_signal =  wgn(1,N,Pj,'linear','real');
+            Pj = rms(jamming_signal)^2;
         % ------- Single Tone Jammer -------- 
         elseif jamming_type==1
             fb = (0.4*rand()+0.1)*W;

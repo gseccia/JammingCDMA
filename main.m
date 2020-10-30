@@ -4,15 +4,15 @@ clear all
 close all
 
 %% Variabili
-Lc=63;                    %Processing gain
+Lc=511;                     %Processing gain
 Tb=1/10;                   %Tempo di bit
-len_signal=10;             %Lunghezza dei segnali trasmessi
-Nuser = 16;                 %Numero di utenti
+len_signal=100;             %Lunghezza dei segnali trasmessi
+Nuser = 50;                %Numero di utenti
 EbNo = 20;                 %Qualità del canale
-plotting = true;          %Plotting nel dominio del tempo e frequenza
-jammer_intensity = 2;      %Rapporto potenza jammer/potenza segnale
-jamming_type=2;            %Tipo Jammer 0:Broadband 1:SingleTone 2:MultiTone
-alpha = 0.5;               %Valori da 1 a 5 -> Figura 10.44
+plotting = true;           %Plotting nel dominio del tempo e frequenza
+jammer_intensity = 5;      %Rapporto potenza jammer/potenza segnale
+jamming_type=0;            %Tipo Jammer 0:Broadband 1:SingleTone 2:MultiTone
+alpha = 2.5;               %Valori da 1 a 5 -> Figura 10.44
 
 %Matrici dei segnali in forma binaria
 v_t_ref = sequence_generator(Nuser,len_signal);
@@ -22,7 +22,7 @@ v_t_ref = sequence_generator(Nuser,len_signal);
 ber = mean(ber)
 
 %% BER al variare di Lc e Nutenti (Senza Jamming)
-Nuser=55;
+Nuser=60;
 Lc_values = [15 63 127 511];	%Valori del processing gain da testare
 mean_ber = zeros(length(Lc_values),Nuser);	%Nuser rappresenta il numero massimo di utenti da considerare
 LegendsStrings = cell(length(Lc_values),1);
@@ -32,7 +32,7 @@ Tb=1/50;
 
 for i=1:length(Lc_values)
     for k = 1:Nuser
-        bers = zeros(1,10);
+        bers = zeros(1,30);
         for j=1:length(bers)
             v_t_ref = sequence_generator(k,len_signal);
             [n_err,ber,rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc_values(i),Tb,EbNo,0,0,0,0);
@@ -54,13 +54,14 @@ for k =2:length(Lc_values)
 end
 
 grid
-xlabel('N utenti')
+xlabel('Numero utenti')
 ylabel('Bit Error Rate')
 ylim([10^-4 1])
 legend(LegendsStrings, 'Interpreter', 'none')
 dim = [.15 .9 .0 .0];
 str = join(['Eb/N_0=',num2str(round(db(EbNo,'power'))),' dB']);
 annotation('textbox',dim,'String',str,'FitBoxToText','on');
+title('BER al variare di Lc e Numero utenti (Senza Jamming)')
 
 %% BER al variare di EbN0 e Nutenti (Senza Jamming)
 EbNos = logspace(-3,3,21);       %Intervallo di canali da testare
@@ -105,7 +106,7 @@ str = join(['Lc=',num2str(Lc)]);
 annotation('textbox',dim,'String',str,'FitBoxToText','on');
 title('BER al variare di EbN0 e Nutenti (Senza Jamming)')
 
-%% FISSIAMO IL NUMERO DI UTENTI E FACCIAMO VARIARE LC ED EBN0
+%% BER al variare di Lc e EbN0
 EbNos = logspace(-3,3,21);	%Intervallo di canali da testare
 Lc_values = [63 127 255 511];
 Nut = 16;
@@ -117,7 +118,7 @@ Tb=1/10;
 for i=1:length(Lc_values)
     for k = 1:length(EbNos)
         v_t_ref = sequence_generator(Nut,len_signal);
-        bers = zeros(1,20);
+        bers = zeros(1,10);
         for j=1:length(bers)
             [i, k, j]
             [n_err,ber,rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc_values(i),Tb,EbNos(k),0,0,0,0);
@@ -159,7 +160,7 @@ jam_type = [0 1 2]; %Tipologie di jammer
 Lcs=[63 127 511]; %Processing gain considerati
 
 Tb=1/10; 
-alpha=0.5;
+alpha=2.5;
 EbNo = 20;
 
 jam_name = {'Broadband \alpha=0.5','STJ','MTJ'};
@@ -198,7 +199,6 @@ for k =2:(length(jam_type)*length(Lcs))
 end
 
 grid
-title('BER al variare della potenza del Jammer')
 xlabel('Rapporto interferenza-segnale')
 ylabel('Bit Error Rate')
 ylim([10^-4 1])
@@ -268,6 +268,89 @@ dim = [.15 .9 .0 .0];
 str = join(['Numero di utenti=',num2str(Nuser),' con Eb/N_0=', num2str(db(EbNo, 'power')), ' dB']);
 annotation('textbox',dim,'String',str,'FitBoxToText','on');
 
+%% BER con e senza jamming (LC fissato, variano gli utenti)
+Lc = 511;
+Nuser = 30;
+len_signal=100;
+jam_type = [0 1 2 3]; %Tipologie di jammer
+
+Tb=1/10; 
+alpha=2.5;
+EbNo = 20;
+
+mean_ber = zeros(Nuser, length(jam_type));
+
+for i=1:Nuser
+    %Matrici dei segnali in forma binaria
+    v_t_ref = sequence_generator(i,len_signal);
+    for k=1:length(jam_type)
+        bers = zeros(1,5);
+        if k == 4
+            jam_intensity = 0;
+        else
+            jam_intensity = 5;
+        end
+        for j=1:length(bers)
+            [n_err,ber,rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo,0,jam_intensity,jam_type(k),alpha);
+            bers(j) = mean(ber);
+        end
+        [i k bers(j)]
+        mean_ber(i, k) = mean(bers);
+    end
+end
+
+mean_ber(mean_ber==0)=10^-6;
+
+figure
+jam_name = {'Broadband','STJ','MTJ', 'No Jammer'};
+for i = 1:length(jam_type)
+ semilogy(mean_ber(:,i))
+ hold on
+end
+xlabel('Numero Utenti')
+ylabel('Bit Error Rate')
+title('BER al variare del Numero di Utenti con e senza Jamming')
+legend(jam_name)
+
+%% BER con e senza jamming (LC fissato, varia EbN0)
+Lc = 511;
+Nuser = 25;
+len_signal=100;
+jam_type = [0 1 2]; %Tipologie di jammer
+jam_intensity = 20;
+
+Tb=1/10; 
+alpha=2.5;
+EbN0 = logspace(-3,3,21);
+
+mean_ber = zeros(Nuser, length(jam_type));
+
+for i=1:length(EbN0)
+    %Matrici dei segnali in forma binaria
+    v_t_ref = sequence_generator(Nuser,len_signal);
+    for k=1:length(jam_type)
+        bers = zeros(1,5);
+        for j=1:length(bers)
+            [n_err,ber,rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbN0(i),0,jam_intensity,jam_type(k),alpha);
+            bers(j) = mean(ber);
+        end
+        [i k bers(j)]
+        mean_ber(i, k) = mean(bers);
+    end
+end
+
+mean_ber(mean_ber==0)=10^-6;
+
+figure
+jam_name = {'Broadband','STJ','MTJ'};
+for i = 1:length(jam_type)
+ semilogy(mean_ber(:,i))
+ hold on
+end
+xlabel('EbN0')
+ylabel('Bit Error Rate')
+title('BER al variare di EbN0 con Jamming')
+legend(jam_name)
 %% Trasferimento Audio
 Lc=64;                     %Processing gain
 Tb=1/10;                   %Tempo di bit
