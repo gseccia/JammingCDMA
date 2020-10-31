@@ -50,8 +50,8 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
         % ------- Single Tone Jammer -------- 
         elseif jamming_type==1
             fb = (0.8*rand()+0.1)*W;
-            %jamming_signal = sqrt(Pj)*ones(1, N);
-            jamming_signal = sqrt(Pj)*cos(2*pi*fb*t);
+            jamming_signal = sqrt(Pj)*ones(1, N);
+%             jamming_signal = sqrt(Pj)*cos(2*pi*fb*t);
                         
         % ------- Multi Tone Jammer --------     
         elseif jamming_type==2
@@ -248,10 +248,10 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
         legend('BPSK','Integration')
 
         subplot(3,1,3)
-        stairs(tb_interval, v_t_ref(1,:))
+        stairs(tb_interval, v_t_bpsk(1,:))
         hold on
-        stairs(tb_interval, rxbits(1,:))
-        ylim([-0.5,1.5])
+        stairs(tb_interval, bpsk_modulation(rxbits(1,:)))
+        ylim([-1.5,1.5])
         legend('Tx','Rx')
         
         % in presenza di jamming
@@ -259,7 +259,7 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
             figure
             subplot(2,2,1)
             stairs(tc_interval, jamming_signal)
-            ylim([-0.1 + min(jamming_signal) * 1.2, max(jamming_signal) * 1.2 + 0.1])
+            ylim([-0.1 + min(jamming_signal), max(jamming_signal)+ 0.1])
             title("Jamming Signal")
 
             [~, jamming_signal_f] = fft_transform(jamming_signal, 1/Tc);
@@ -277,7 +277,7 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
             [~, jamming_signal_f_spred] = fft_transform(jamming_signal_spreaded, 1/Tc);
             subplot(2,2,4)
             plot(tcf_interval,jamming_signal_f_spred)
-            title("Jamming Signal")
+            title("Jamming Signal Spreaded")
         end    
     end
 end

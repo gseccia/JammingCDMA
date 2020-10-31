@@ -14,9 +14,6 @@ max_lambda=30;
 step_lambda = 0.5;
 [lambda,mu] = meshgrid(min_lambda:step_lambda:max_lambda,min_mu:step_mu:max_mu);
 
-
-
-
 i = 0;
 j = 0;
 for x = min_lambda:step_lambda:max_lambda
@@ -67,7 +64,7 @@ clc
 
 total_packets = 1000;
 servers = 5;
-monte_carlo_simulations = 10;
+monte_carlo_simulations = 1000;
 
 meanlen = [];
 meanlen_theory = [];
@@ -92,6 +89,7 @@ for x = lambda
             %hold on
             %stairs(len(:,1),len(:,2),'^')
             meanlength_montecarlo=meanlength_montecarlo+meanlength;
+            [x y m]
         end
         meanlength = meanlength_montecarlo/monte_carlo_simulations;
         [nq_expected,p0, pQ, rho] = expected_mean_queue(1/x, 1/y, servers);
