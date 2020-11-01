@@ -1,9 +1,9 @@
 %MMk
 
 %%
-total_packets = 1000;
+total_packets = 100;
 servers = 3;
-monte_carlo_simulations = 1;
+monte_carlo_simulations = 10;
 
 meanlen = [];
 min_mu = 1;
@@ -41,13 +41,13 @@ end
 figure
 hold on
 grid on
-surf(lambda,mu,meanlen');
+surf(1./lambda,1./mu,meanlen');
 xlabel('lambda');
 ylabel('mu');
 zlabel('mean length of the queue in teory');
 hold off
 figure
-surf(lambda,mu,double([1./lambda>servers*1./mu]));
+surf(1./lambda,1./mu,double([1./lambda>servers*1./mu]));
     
 % figure
 % hold on

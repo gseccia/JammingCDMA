@@ -10,8 +10,6 @@ function [c_t] = pn_generator(Nuser,Lc,len_signal)
         if k == length(polys)+1
             k = 1;
         end
-%         else
-%         k = mod(i, length(polys));
         pn_seq_gen = comm.PNSequence('Polynomial', de2bi(polys(k)),'SamplesPerFrame',Lc,'InitialConditions',[zeros(1, degree-1) 1]);
         c_t_ref(i,:)=pn_seq_gen()';
     end
