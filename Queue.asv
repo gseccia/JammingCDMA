@@ -62,7 +62,7 @@ surf(lambda,mu,double([1./lambda>servers*1./mu]));
 clear all
 clc
 
-total_packets = 10000;
+total_packets = 1000;
 servers = 5;
 monte_carlo_simulations = 1000;
 
@@ -104,10 +104,10 @@ for x = lambda
 end
 %%
 figure
-semilogy(1./mu, smoothdata(meanlen_theory'),'--')
+semilogy(1./mu, meanlen_theory','--')
 hold on
-semilogy(1./mu, smoothdata(meanlen'))
-lambda_name = {'40', '50', '60'};
+semilogy(1./mu, meanlen')
+lambda_name = {'10','20','30', '40', '50', '60'};
 xlabel('\mu')
 ylabel('Mean Queue Length')
 legend(lambda_name)
