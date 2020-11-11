@@ -10,7 +10,7 @@ len_signal=10;             %Lunghezza dei segnali trasmessi
 Nuser = 3;                %Numero di utenti
 EbNo = 20;                 %Qualità del canale
 plotting = true;           %Plotting nel dominio del tempo e frequenza
-jammer_intensity = 5;      %Rapporto potenza jammer/potenza segnale
+jammer_intensity = 0;      %Rapporto potenza jammer/potenza segnale
 jamming_type=1;            %Tipo Jammer 0:Broadband 1:SingleTone 2:MultiTone
 alpha = 0.2;               %Valori da 1 a 5 -> Figura 10.44
 
@@ -22,8 +22,8 @@ v_t_ref = sequence_generator(Nuser,len_signal);
 ber = mean(ber)
 
 %% BER al variare di Lc e Nutenti (Senza Jamming)
-Nuser=60;
-Lc_values = [15 63 127 511];	%Valori del processing gain da testare
+Nuser=50;
+Lc_values = [63 127 511];	%Valori del processing gain da testare
 mean_ber = zeros(length(Lc_values),Nuser);	%Nuser rappresenta il numero massimo di utenti da considerare
 LegendsStrings = cell(length(Lc_values),1);
 EbNo = 20;
@@ -151,13 +151,13 @@ title('BER al variare di EbN0 e Lc (Senza Jamming)')
  
 %% BER al variare di Jamming intensity e type
 Nuser = 5;
-len_signal=1000;
+len_signal=100;
 %Matrici dei segnali in forma binaria
 v_t_ref = sequence_generator(Nuser,len_signal);
 
 jam_intensity = [0:1:10]; %Intensità del jamming rispetto al segnale
 jam_type = [0 1 2]; %Tipologie di jammer
-Lcs=[63]; %Processing gain considerati
+Lcs=[127]; %Processing gain considerati
 
 Tb=1/10; 
 alpha=2.5;
@@ -211,7 +211,7 @@ title('BER al variare di Jamming intensity e type')
 %% BER con e senza jamming (LC fissato, variano gli utenti)
 Lc = 127;
 Nuser = 10;
-len_signal=1000;
+len_signal=100;
 jam_type = [0 1 2 3]; %Tipologie di jammer
 
 Tb=1/10; 

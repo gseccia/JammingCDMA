@@ -5,14 +5,19 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
     % Matrice dei segnali, una riga per ogni utente
     [Nuser,len_signal]=size(v_t_ref);
     
+    Eb=1;
+    
     Tc = Tb/Lc; % Chip interval
     N=len_signal*Lc; % Lunghezza della sequenza codificata
     
     EbNo = db(EbNo, 'power');        
     W = 1/Tc;
-
+    
     % Modulazione BPSK
     v_t_bpsk = bpsk_modulation(v_t_ref);
+    p_des = sqrt(Eb/Tb);
+    v_t_bpsk = p_des*v_t_bpsk;
+    Ps1 = rms(v_t_bpsk(1,:))^2;
 
     % Generazione codici PN
     c_t_ref = pn_generator(Nuser,Lc,len_signal);
@@ -20,6 +25,7 @@ function [n_err, ber, rxbits] = cdma_transmission_and_metrics(v_t_ref,Lc,Tb,EbNo
     % Estensione dei segnali per renderli confrontabili ai codici
     v_t_ext = sequence_extend(v_t_ref, Lc);
     v_t = sequence_extend(v_t_bpsk, Lc);
+    Ps2 = rms(v_t(1,:))^2;
     
     % Spreading
     y_t = v_t.*c_t_ref;
